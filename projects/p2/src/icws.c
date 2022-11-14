@@ -1,17 +1,18 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include "pcsa_net.h"
 #include <getopt.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
-#include <string.h>
+#include "parse.h"
 
 #define BUFSIZE 1024
 
 int tmp;
-char *port, *root;
+char *port, *root, *path = NULL;
 typedef struct sockaddr SA;
 
 const struct option options[] =
@@ -23,22 +24,35 @@ const struct option options[] =
 
 void serve_http(int connFd) {
     char buf[BUFSIZE];
+    char buf2[BUFSIZE];
+
+    Request *request = parse(buf, BUFSIZE, connFd);
+
+    struct stat sb;
+    stat(path, &sb);
+    char *lastMod = ctime(&sb.st_mtime);
+    lastMod[strcspn(lastMod, "\n")] = 0;
 
     if (!read_line(connFd, buf, BUFSIZE)) 
         return ;
-
-    printf("LOG: %s\n", buf);
-
-    char method[BUFSIZE], uri[BUFSIZE], version[BUFSIZE];
-    sscanf(buf, "%s %s %s", method, uri, version);
 
     while (read_line(connFd, buf, BUFSIZE) > 0) {
         if (strcmp(buf, "\r\n") == 0) break;
     }
 
-    if (strcmp(method, "GET") == 0 &&
-            strcmp(uri, "/") == 0) {
-    }
+    if (request == NULL) {
+        sprintf(buf2,
+        "HTTP/1.1 400 Bad Request\r\n"
+        "Date : %s\r\n"
+        "Server : ICWS\r\n"
+        "Connection : close\r\n"
+        "Content-Type : %s\r\n"
+        "Content-Length : %lu\r\n"
+        "Last-Modified : %s\r\n", );
+    } 
+
+    if (strcasecmp)
+
 
 }
 
