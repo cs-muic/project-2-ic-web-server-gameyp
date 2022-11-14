@@ -9,7 +9,7 @@
 #include <netdb.h>
 #include "parse.h"
 
-#define BUFSIZE 1024
+#define BUFSIZE 8192
 
 int tmp;
 char *port, *root, *path = NULL;
@@ -22,16 +22,30 @@ const struct option options[] =
         {NULL, 0, 0, 0}
 };
 
+// https://stackoverflow.com/questions/5309471/getting-file-extension-in-c
+const char *get_filename_ext(const char *filename) {
+    const char *dot = strrchr(filename, '.');
+    if(!dot || dot == filename) return "";
+    return dot + 1;
+}
+
 void serve_http(int connFd) {
     char buf[BUFSIZE];
     char buf2[BUFSIZE];
+    char method[BUFSIZE];
+    char httpVersion[BUFSIZE];
+    char *ext;
+    char *file_ext;
+    char *path;
 
     Request *request = parse(buf, BUFSIZE, connFd);
 
-    struct stat sb;
-    stat(path, &sb);
-    char *lastMod = ctime(&sb.st_mtime);
-    lastMod[strcspn(lastMod, "\n")] = 0;
+    strcpy(method, request->http_method);
+    strcpy(httpVersion, request->http_version);
+
+    ext = get_filename_ext(NULL);
+
+    //file_ext = get_filename_ext();
 
     if (!read_line(connFd, buf, BUFSIZE)) 
         return ;
@@ -40,18 +54,53 @@ void serve_http(int connFd) {
         if (strcmp(buf, "\r\n") == 0) break;
     }
 
+    // Get MIME TYPE
+    if ((strcmp(ext, "html") == 0) || strcmp(ext, "htm") == 0) {
+        strcpy(ext, "text,html");
+    } else if (strcmp(ext, "css") == 0) {
+        strcpy(ext, "text/css");
+    } else if (strcmp(ext, "txt") == 0) {
+        strcpy(ext, "text/plain");
+    } else if (strcmp(ext, "js") == 0) {
+        strcpy(ext, "text/javascript");
+    } else if (strcmp(ext, "jpg") == 0) {
+        strcpy(ext, "image/jpg");
+    } else if (strcmp(ext, "png") == 0) {
+        strcpy(ext, "image/png");
+    } else if (strcmp(ext, "gif") == 0) {
+        strcpy(ext, "image/gif");
+    }
+
+
+    // NULL request
     if (request == NULL) {
         sprintf(buf2,
-        "HTTP/1.1 400 Bad Request\r\n"
-        "Date : %s\r\n"
+        "HTTP1.1 400 Bad Request\r\n"
         "Server : ICWS\r\n"
         "Connection : close\r\n"
-        "Content-Type : %s\r\n"
-        "Content-Length : %lu\r\n"
-        "Last-Modified : %s\r\n", );
+        "Content-Type : %s\r\n", NULL);
+        return;
     } 
 
-    if (strcasecmp)
+    // HTTP version
+    if (strcasecmp(httpVersion, "HTTP1.1") != 0) {
+        sprintf(buf2,
+        "HTTP1.1 505 Http Version Not Support\r\n"
+        "Server : ICWS\r\n"
+        "Connection : close\r\n"
+        "Content-Type : %s\r\n", NULL);
+        return;
+    }
+
+    // GET and HEAD method
+    if (strcmp(method, "GET") == 0 || strcmp(method, "HEAD") == 0) {
+        sprintf(buf, "HTTP/1.1 200 OK\r\n"
+    "Server: ICWS\r\n"
+    "Connection: close\r\n"
+    "Content-type: text/html\r\n\r\n", NULL);
+    }
+
+
 
 
 }
