@@ -45,9 +45,6 @@ void serve_http(int connFd) {
 
     ext = get_filename_ext(NULL);
 
-    if (!read_line(connFd, buf, BUFSIZE)) 
-        return ;
-
     while (read_line(connFd, buf, BUFSIZE) > 0) {
         if (strcmp(buf, "\r\n") == 0) break;
     }
@@ -99,6 +96,17 @@ void serve_http(int connFd) {
     "Connection: close\r\n"
     "Content-type: text/html\r\n\r\n", NULL);
     write_all(connFd, buf, strlen(buf));
+        if (strcmp(method, "GET") == 0) {
+            printf("GET Method");
+            return;
+        } else if (strcmp(method, "HEAD") == 0) {
+            printf("HEAD Method");
+            return;
+        } else {
+            sprintf(buf, "HTTP/1.1 501 Unsupported Version\r\n"
+            "Server: ICWS\r\n"
+            "Connection: close\r\n");
+        }
     }
 
 
