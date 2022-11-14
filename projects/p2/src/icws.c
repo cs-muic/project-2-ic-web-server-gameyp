@@ -45,8 +45,6 @@ void serve_http(int connFd) {
 
     ext = get_filename_ext(NULL);
 
-    //file_ext = get_filename_ext();
-
     if (!read_line(connFd, buf, BUFSIZE)) 
         return ;
 
@@ -79,6 +77,7 @@ void serve_http(int connFd) {
         "Server : ICWS\r\n"
         "Connection : close\r\n"
         "Content-Type : %s\r\n", NULL);
+        write_all(connFd, buf, strlen(buf));
         return;
     } 
 
@@ -89,6 +88,7 @@ void serve_http(int connFd) {
         "Server : ICWS\r\n"
         "Connection : close\r\n"
         "Content-Type : %s\r\n", NULL);
+        write_all(connFd, buf, strlen(buf));
         return;
     }
 
@@ -98,9 +98,8 @@ void serve_http(int connFd) {
     "Server: ICWS\r\n"
     "Connection: close\r\n"
     "Content-type: text/html\r\n\r\n", NULL);
+    write_all(connFd, buf, strlen(buf));
     }
-
-
 
 
 }
